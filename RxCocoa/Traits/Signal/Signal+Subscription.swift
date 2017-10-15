@@ -58,6 +58,32 @@ extension SharedSequenceConvertibleType where SharingStrategy == SignalSharingSt
             relay.accept(e)
         })
     }
+    
+    /**
+     Subscribes to observable sequence using custom emitter function.
+     
+     - parameter emitter: Function used to emit elements from `self`.
+     - returns: Object representing subscription.
+     */
+    public func emit<R>(to emitter: (Observable<E>) -> R) -> R {
+        return emitter(self.asObservable())
+    }
+    
+    /**
+     Subscribes to observable sequence using custom emitter function and final parameter passed to emitter function
+     after `self` is passed.
+     
+         public func emit<R1, R2>(to with: Self -> R1 -> R2, curriedArgument: R1) -> R2 {
+             return emitter(self)(curriedArgument)
+         }
+     
+     - parameter emitter: Function used to emit elements from `self`.
+     - parameter curriedArgument: Final argument passed to `emitter` to finish emitting process.
+     - returns: Object representing subscription.
+     */
+    public func emit<R1, R2>(to emitter: (Observable<E>) -> (R1) -> R2, curriedArgument: R1) -> R2 {
+        return emitter(self.asObservable())(curriedArgument)
+    }
 
     /**
      Subscribes an element handler, a completion handler and disposed handler to an observable sequence.
