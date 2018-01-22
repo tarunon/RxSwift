@@ -573,17 +573,108 @@ extension MaybeTest {
             ])
     }
 
-    func test_flatMap() {
-        let scheduler = TestScheduler(initialClock: 0)
-
-        let res = scheduler.start {
-            (Maybe<Int>.just(1).flatMap { .just($0 * 2) } as Maybe<Int>).asObservable()
+    func test_flatMap_single() {
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Maybe<Int>.just(1).flatMap { Single.just($0 * 2) } as Maybe<Int>).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .next(200, 2),
+                .completed(200)
+                ])
         }
-
-        XCTAssertEqual(res.events, [
-            .next(200, 2),
-            .completed(200)
-            ])
+        
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Maybe<Int>.empty().flatMap { Single.just($0 * 2) } as Maybe<Int>).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .completed(200)
+                ])
+        }
+    }
+    
+    func test_flatMap_maybe() {
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Maybe<Int>.just(1).flatMap { Maybe.just($0 * 2) } as Maybe<Int>).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .next(200, 2),
+                .completed(200)
+                ])
+        }
+        
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Maybe<Int>.just(1).flatMap { _ in Maybe.empty() } as Maybe<Int>).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .completed(200)
+                ])
+        }
+        
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Maybe<Int>.empty().flatMap { Maybe.just($0 * 2) } as Maybe<Int>).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .completed(200)
+                ])
+        }
+        
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Maybe<Int>.empty().flatMap { _ in Maybe.empty() } as Maybe<Int>).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .completed(200)
+                ])
+        }
+    }
+    
+    func test_flatMap_completable() {
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Maybe<Int>.just(1).flatMap { _ in  Completable.empty() } as Completable).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .completed(200)
+                ])
+        }
+        
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Maybe<Int>.empty().flatMap { _ in  Completable.empty() } as Completable).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .completed(200)
+                ])
+        }
     }
 }
 

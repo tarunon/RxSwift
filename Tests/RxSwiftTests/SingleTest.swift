@@ -522,15 +522,54 @@ extension SingleTest {
             ])
     }
 
-    func test_flatMap() {
+    func test_flatMap_single() {
         let scheduler = TestScheduler(initialClock: 0)
 
         let res = scheduler.start {
-            (Single<Int>.just(1).flatMap { .just($0 * 2) } as Single<Int>).asObservable()
+            (Single<Int>.just(1).flatMap { Single.just($0 * 2) } as Single<Int>).asObservable()
         }
 
         XCTAssertEqual(res.events, [
             .next(200, 2),
+            .completed(200)
+            ])
+    }
+    
+    func test_flatMap_maybe() {
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Single<Int>.just(1).flatMap { Maybe.just($0 * 2) } as Maybe<Int>).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .next(200, 2),
+                .completed(200)
+                ])
+        }
+        
+        do {
+            let scheduler = TestScheduler(initialClock: 0)
+            
+            let res = scheduler.start {
+                (Single<Int>.just(1).flatMap { _ in Maybe.empty() } as Maybe<Int>).asObservable()
+            }
+            
+            XCTAssertEqual(res.events, [
+                .completed(200)
+                ])
+        }
+    }
+    
+    func test_flatMap_completable() {
+        let scheduler = TestScheduler(initialClock: 0)
+        
+        let res = scheduler.start {
+            (Single<Int>.just(1).flatMap { _ in  Completable.empty() } as Completable).asObservable()
+        }
+        
+        XCTAssertEqual(res.events, [
             .completed(200)
             ])
     }
